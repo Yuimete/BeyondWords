@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Mute Translator — Live Translate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body class="app-body">
+
+  <!-- TOP BAR -->
+  <header class="app-header">
+    <a href="index.html" class="back-btn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </a>
+    <div class="app-title">
+      <span>🤟</span> Mute Translator
+    </div>
+    <div class="status-indicator" id="statusIndicator">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Preparing...</span>
+    </div>
+  </header>
+
+  <!-- CAMERA SECTION -->
+  <div class="camera-section">
+    <div class="camera-wrapper" id="cameraWrapper">
+      <video id="videoFeed" autoplay playsinline muted></video>
+      <canvas id="overlayCanvas"></canvas>
+
+      <!-- Corner brackets -->
+      <div class="bracket tl"></div>
+      <div class="bracket tr"></div>
+      <div class="bracket bl"></div>
+      <div class="bracket br"></div>
+
+      <!-- Scan effect -->
+      <div class="scan-overlay" id="scanOverlay"></div>
+
+      <!-- Permission overlay -->
+      <div class="permission-overlay" id="permissionOverlay">
+        <div class="perm-content">
+          <div class="perm-icon">📷</div>
+          <h3>Camera Required</h3>
+          <p>Please allow camera access to start translating.</p>
+          <button class="perm-btn" id="permBtn">Allow Camera</button>
+        </div>
+      </div>
+
+      <!-- Loading overlay -->
+      <div class="loading-overlay" id="loadingOverlay">
+        <div class="load-content">
+          <div class="load-spinner"></div>
+          <p>Loading AI model...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live detection badge -->
+    <div class="detection-badge" id="detectionBadge">
+      <div class="badge-icon" id="badgeIcon">🤟</div>
+      <div class="badge-info">
+        <div class="badge-label">Detected Sign</div>
+        <div class="badge-gesture" id="badgeGesture">—</div>
+      </div>
+      <div class="confidence-bar">
+        <div class="confidence-fill" id="confidenceFill"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSLATION PANEL -->
+  <div class="translation-panel">
+
+    <!-- Current word detected -->
+    <div class="current-detection">
+      <div class="detect-row">
+        <div class="detect-block">
+          <div class="detect-label">Filipino</div>
+          <div class="detect-word" id="currentFil">—</div>
+        </div>
+        <div class="detect-divider">/</div>
+        <div class="detect-block">
+          <div class="detect-label">English</div>
+          <div class="detect-word detect-word-en" id="currentEn">—</div>
+        </div>
+        <div class="detect-confidence" id="confPercent">—</div>
+      </div>
+    </div>
+
+    <!-- Sentence builder -->
+    <div class="sentence-section">
+      <div class="sentence-header">
+        <span class="sentence-label">💬 Sentence</span>
+        <div class="sentence-actions">
+          <button class="action-btn" id="undoBtn" title="Undo last word">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/></svg>
+          </button>
+          <button class="action-btn danger" id="clearBtn" title="Clear all">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M8 6V4h8v2"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="sentence-display" id="sentenceDisplay">
+        <span class="sentence-placeholder">Make FSL signs to build a sentence...</span>
+      </div>
+      <div class="sentence-en" id="sentenceEn"></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <!-- Voice selector -->
+      <div class="voice-selector">
+        <label>🔊 Voice:</label>
+        <select id="voiceSelect">
+          <option value="fil">Filipino (Tagalog)</option>
+          <option value="en" selected>English</option>
+          <option value="both">Both</option>
+        </select>
+      </div>
+
+      <!-- Speak button -->
+      <button class="speak-btn" id="speakBtn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+        <span>Speak Aloud</span>
+      </button>
+
+      <!-- Space / Add word button -->
+      <button class="add-word-btn" id="addWordBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        Add Word Manually
+      </button>
+    </div>
+
+    <!-- Sign reference quick guide -->
+    <details class="sign-reference">
+      <summary>📖 FSL Quick Reference</summary>
+      <div class="ref-grid" id="refGrid">
+        <!-- populated by JS -->
+      </div>
+    </details>
+
+  </div>
+
+  <!-- MediaPipe -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1640029074/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1620248257/drawing_utils.js" crossorigin="anonymous"></script>
+
+  <script src="js/gesture.js"></script>
+  <script src="js/sentence.js"></script>
+  <script src="js/tts.js"></script>
+  <script src="js/camera.js"></script>
+</body>
+</html>
